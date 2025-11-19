@@ -1,0 +1,190 @@
+Prompt: “WeLink – Evelyn Hone College Lost & Found System”
+
+Project Title:
+WeLink – Evelyn Hone College Lost and Found System
+
+Objective:
+Develop a fully functional web application for Evelyn Hone College to manage lost and found items. The system should have a futuristic, clean, and professional interface, designed for both students and administrators, each with their own dashboard and landing page.
+
+Website Overview:
+WeLink is an interactive digital platform that connects Evelyn Hone College students and administrators to manage lost and found items efficiently. It offers user authentication, notifications, and an admin management system.
+
+Key User Roles & Pages:
+
+🧍 1. Users (Students)
+
+Landing Page:
+
+Futuristic, clean interface with Evelyn Hone College branding and logo.
+
+Sections: “Report Lost Item,” “Submit Found Item,” “View Recent Posts.”
+
+Short guide: “How WeLink Works” (3-step process).
+
+Prominent Login/Sign Up buttons (Students use Evelyn Hone student number to register).
+
+Testimonials or student success stories section.
+
+Futuristic footer with college contact info and social links.
+
+User Dashboard:
+
+View and search lost/found items.
+
+Upload Lost or Found Items (with image, item name, description, location, date).
+
+Receive email confirmation and notifications on matched or new items.
+
+Option to mark an item as “Returned.”
+
+Edit profile and view submission history.
+
+🧑‍💼 2. Administrators
+
+Admin Landing Page:
+
+Sleek, futuristic control-center theme (e.g., dark mode, neon blue accents).
+
+Quick stats overview: number of users, lost items, found items, pending approvals.
+
+Secure login for authorized administrators only.
+
+Access to Admin Dashboard after authentication.
+
+Admin Dashboard:
+
+Approve, edit, or delete item listings.
+
+Manage users (activate/deactivate accounts).
+
+Edit and update homepage content (announcements, notices).
+
+Send system-wide notifications or email alerts.
+
+View analytics (e.g., most common lost item categories, trends over time).
+
+Core Features (All Users):
+
+Upload and view Lost and Found items (with photos and descriptions).
+
+Automatic email notifications after submission.
+
+Real-time notifications when new items are uploaded or matched.
+
+Search and filter by item type, date, or location.
+
+Responsive design – optimized for mobile and desktop.
+
+Functionality Breakdown:
+
+🔹 Frontend:
+
+HTML5, CSS3, JavaScript (or optionally TailwindCSS / Bootstrap).
+
+Futuristic clean UI — smooth animations, glowing buttons, card layouts, and hover effects.
+
+Separate landing pages for users and administrators.
+
+Login and registration modals.
+
+🔹 Backend (Python):
+
+Flask or Django framework.
+
+Handles authentication (students and admins).
+
+Manages form submissions, image uploads, and database operations.
+
+Email sending via flask-mail or smtplib.
+
+🔹 Database (MySQL):
+
+Tables:
+1. users (
+     id INT PRIMARY KEY AUTO_INCREMENT,
+     student_number VARCHAR(20),
+     name VARCHAR(100),
+     email VARCHAR(100),
+     password VARCHAR(255),
+     role ENUM('user', 'admin'),
+     date_created DATETIME
+ )
+
+2. lost_items (
+     id INT PRIMARY KEY AUTO_INCREMENT,
+     user_id INT,
+     item_name VARCHAR(100),
+     description TEXT,
+     date_lost DATE,
+     location VARCHAR(100),
+     image_path VARCHAR(255),
+     status ENUM('pending', 'found', 'returned'),
+     FOREIGN KEY (user_id) REFERENCES users(id)
+ )
+
+3. found_items (
+     id INT PRIMARY KEY AUTO_INCREMENT,
+     user_id INT,
+     item_name VARCHAR(100),
+     description TEXT,
+     date_found DATE,
+     location VARCHAR(100),
+     image_path VARCHAR(255),
+     status ENUM('pending', 'claimed'),
+     FOREIGN KEY (user_id) REFERENCES users(id)
+ )
+
+4. notifications (
+     id INT PRIMARY KEY AUTO_INCREMENT,
+     user_id INT,
+     message TEXT,
+     is_read BOOLEAN DEFAULT FALSE,
+     date_created DATETIME,
+     FOREIGN KEY (user_id) REFERENCES users(id)
+ )
+
+
+🔹 Email & Notifications:
+
+Email confirmation on item submission.
+
+Notifications for new uploads or item matches.
+
+Admin broadcast notifications.
+
+🔹 Security:
+
+Secure password hashing (e.g., bcrypt).
+
+Role-based access control (User vs Admin).
+
+Validation and CSRF protection.
+
+Design Style Guide:
+
+Theme: Futuristic minimalism.
+
+Colors: Electric Blue (#00BFFF), White (#FFFFFF), Jet Black (#121212), Silver (#C0C0C0).
+
+Fonts: Poppins or Montserrat.
+
+Elements: Rounded cards, glassmorphism backgrounds, neon-glow buttons, smooth hover transitions.
+
+Icons: Modern vector icons (Lucide or FontAwesome).
+
+Tech Stack Summary:
+
+Frontend: HTML, CSS, JavaScript (optionally TailwindCSS or Bootstrap).
+
+Backend: Python (Flask or Django).
+
+Database: MySQL.
+
+Email/Notifications: Flask-Mail or smtplib.
+
+Authentication: Session or JWT-based login.
+
+Deployment: Localhost for development → deployable on Render, PythonAnywhere, or AWS.
+
+Core Goal:
+Build a modern, intelligent Lost & Found management platform that connects Evelyn Hone students and administrators, enhances accountability, and ensures lost items are easily reported, tracked, and returned — powered by WeLink

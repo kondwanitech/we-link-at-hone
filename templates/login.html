@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block title %}Login - WeLink{% endblock %}
+
+{% block content %}
+<div class="auth-page">
+    <div class="auth-container">
+        <div class="auth-card">
+            <div class="auth-header">
+                <h1><i class="fas fa-link"></i> WeLink</h1>
+                <p>Login to your account</p>
+            </div>
+            <form method="POST" class="auth-form">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                <div class="form-group">
+                    <label for="identifier"><i class="fas fa-user"></i> Email or Student Number</label>
+                    <input type="text" id="identifier" name="identifier" required placeholder="Email or Student Number">
+                </div>
+                <div class="form-group">
+                    <label for="password"><i class="fas fa-lock"></i> Password</label>
+                    <input type="password" id="password" name="password" required>
+                </div>
+                <button type="submit" class="btn-submit">Login</button>
+            </form>
+            <div class="auth-footer">
+                <p>Don't have an account? <a href="{{ url_for('register') }}">Register here</a></p>
+                <p><a href="{{ url_for('index') }}">Back to Home</a></p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

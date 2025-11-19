@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% block title %}Register - WeLink{% endblock %}
+
+{% block content %}
+<div class="auth-page">
+    <div class="auth-container">
+        <div class="auth-card">
+            <div class="auth-header">
+                <h1><i class="fas fa-link"></i> WeLink</h1>
+                <p>Create your account</p>
+            </div>
+            <form method="POST" class="auth-form">
+                {{ form.hidden_tag() }}
+                <div class="form-group">
+                    <label for="student_number"><i class="fas fa-id-card"></i> Student Number</label>
+                    {{ form.student_number(class="form-control", minlength="10", maxlength="12", required=True) }}
+                    {% if form.student_number.errors %}
+                        <div class="form-errors">
+                            {% for error in form.student_number.errors %}
+                                <small class="error-text"><i class="fas fa-exclamation-circle"></i> {{ error }}</small>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                    <small class="form-hint">Must be 10-12 characters</small>
+                </div>
+                <div class="form-group">
+                    <label for="name"><i class="fas fa-user"></i> Full Name</label>
+                    {{ form.name(class="form-control", required=True) }}
+                    {% if form.name.errors %}
+                        <div class="form-errors">
+                            {% for error in form.name.errors %}
+                                <small class="error-text"><i class="fas fa-exclamation-circle"></i> {{ error }}</small>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="form-group">
+                    <label for="email"><i class="fas fa-envelope"></i> Email</label>
+                    {{ form.email(class="form-control", type="email", required=True) }}
+                    {% if form.email.errors %}
+                        <div class="form-errors">
+                            {% for error in form.email.errors %}
+                                <small class="error-text"><i class="fas fa-exclamation-circle"></i> {{ error }}</small>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="form-group">
+                    <label for="password"><i class="fas fa-lock"></i> Password</label>
+                    {{ form.password(class="form-control", pattern="^(?=.*[A-Z])(?=.*[!@#$%^&*(),.?\":{}|<>_\-+=\[\]\\\/;~`]).{8,}$", title="Password must be at least 8 characters, include an uppercase letter and a special character", required=True) }}
+                    {% if form.password.errors %}
+                        <div class="form-errors">
+                            {% for error in form.password.errors %}
+                                <small class="error-text"><i class="fas fa-exclamation-circle"></i> {{ error }}</small>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                    <small class="form-hint">Min 8 characters, 1 uppercase, 1 special character</small>
+                </div>
+                <div class="form-group">
+                    <label for="confirm_password"><i class="fas fa-check-circle"></i> Confirm Password</label>
+                    {{ form.confirm_password(class="form-control", required=True) }}
+                    {% if form.confirm_password.errors %}
+                        <div class="form-errors">
+                            {% for error in form.confirm_password.errors %}
+                                <small class="error-text"><i class="fas fa-exclamation-circle"></i> {{ error }}</small>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+                <button type="submit" class="btn-submit">Register</button>
+            </form>
+            <div class="auth-footer">
+                <p>Already have an account? <a href="{{ url_for('login') }}">Login here</a></p>
+                <p><a href="{{ url_for('index') }}">Back to Home</a></p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

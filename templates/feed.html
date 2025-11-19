@@ -1,0 +1,706 @@
+{% extends "base.html" %}
+
+{% block title %}Feed - WeLink{% endblock %}
+
+{% block content %}
+<div class="dashboard-page">
+    <nav class="dashboard-nav">
+        <div class="nav-container">
+            <div class="logo">
+                <i class="fas fa-link"></i>
+                <span>WeLink</span>
+            </div>
+            <div class="nav-links">
+                <span class="user-name"><i class="fas fa-user"></i> {{ current_user.name }}</span>
+                <a href="{{ url_for('logout') }}" class="btn-logout"><i class="fas fa-sign-out-alt"></i> Logout</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="dashboard-container">
+        <aside class="sidebar">
+            <div class="sidebar-menu">
+                <a href="{{ url_for('dashboard') }}" class="menu-item">
+                    <i class="fas fa-home"></i> Dashboard
+                </a>
+                <a href="{{ url_for('feed') }}" class="menu-item active">
+                    <i class="fas fa-stream"></i> Feed
+                </a>
+                <a href="{{ url_for('profile') }}" class="menu-item">
+                    <i class="fas fa-user-circle"></i> Profile
+                </a>
+                <a href="{{ url_for('report_lost') }}" class="menu-item">
+                    <i class="fas fa-exclamation-circle"></i> Report Lost
+                </a>
+                <a href="{{ url_for('submit_found') }}" class="menu-item">
+                    <i class="fas fa-box"></i> Submit Found
+                </a>
+                <a href="{{ url_for('search') }}" class="menu-item">
+                    <i class="fas fa-search"></i> Search Items
+                </a>
+            </div>
+        </aside>
+
+        <main class="feed-main">
+            <div class="create-post-card">
+                <h3><i class="fas fa-edit"></i> Create a Post</h3>
+                <form method="POST" action="{{ url_for('create_post') }}" enctype="multipart/form-data">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                    <textarea name="content" placeholder="What's on your mind, {{ current_user.name.split()[0] }}?" rows="3" required></textarea>
+                    <div class="post-actions">
+                        <label for="post-image" class="image-upload-label">
+                            <i class="fas fa-image"></i> Add Photo
+                            <input type="file" name="image" id="post-image" accept="image/*">
+                        </label>
+                        <button type="submit" class="btn-post"><i class="fas fa-paper-plane"></i> Post</button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="posts-container">
+                {% if posts|length == 0 %}
+                <div class="no-posts-message">
+                    <i class="fas fa-stream"></i>
+                    <p>No posts yet. Be the first to share something!</p>
+                </div>
+                {% else %}
+                {% for post in posts %}
+                <div class="post-card">
+                    <div class="post-header">
+                        <div class="post-user-info">
+                            <div class="user-avatar">
+                                {% if post.user.profile_picture %}
+                                <img src="{{ url_for('serve_upload', filename=post.user.profile_picture) }}" alt="{{ post.user.name }}">
+                                {% else %}
+                                <i class="fas fa-user-circle"></i>
+                                {% endif %}
+                            </div>
+                            <div>
+                                <h4>{{ post.user.name }}</h4>
+                                <span class="post-time">{{ post.date_created.strftime('%B %d, %Y at %I:%M %p') }}</span>
+                            </div>
+                        </div>
+                        {% if post.user_id == current_user.id %}
+                        <form method="POST" action="{{ url_for('delete_post', post_id=post.id) }}" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete this post?')">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                            <button type="submit" class="btn-delete-post" title="Delete Post">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </form>
+                        {% endif %}
+                    </div>
+
+                    <div class="post-content">
+                        <p>{{ post.content }}</p>
+                        {% if post.image_path %}
+                        <div class="post-image">
+                            <img src="{{ url_for('serve_upload', filename=post.image_path) }}" alt="Post image">
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="post-stats">
+                        <span class="likes-count" id="likes-count-{{ post.id }}">
+                            <i class="fas fa-heart"></i> {{ post.get_likes_count() }} {% if post.get_likes_count() == 1 %}like{% else %}likes{% endif %}
+                        </span>
+                        <span class="comments-count">
+                            <i class="fas fa-comment"></i> {{ post.comments|length }} {% if post.comments|length == 1 %}comment{% else %}comments{% endif %}
+                        </span>
+                    </div>
+
+                    <div class="post-actions-bar">
+                        <button class="action-btn like-btn {% if post.is_liked_by(current_user.id) %}liked{% endif %}" onclick="likePost({{ post.id }})" id="like-btn-{{ post.id }}">
+                            <i class="{% if post.is_liked_by(current_user.id) %}fas{% else %}far{% endif %} fa-heart" id="like-icon-{{ post.id }}"></i>
+                            <span id="like-text-{{ post.id }}">{% if post.is_liked_by(current_user.id) %}Unlike{% else %}Like{% endif %}</span>
+                        </button>
+                        <button class="action-btn comment-btn" onclick="toggleCommentSection({{ post.id }})">
+                            <i class="far fa-comment"></i> Comment
+                        </button>
+                    </div>
+
+                    <div class="comments-section" id="comments-section-{{ post.id }}" style="display: none;">
+                        <div class="comments-list" id="comments-list-{{ post.id }}">
+                            {% for comment in post.comments %}
+                            <div class="comment">
+                                <div class="comment-avatar">
+                                    {% if comment.user.profile_picture %}
+                                    <img src="{{ url_for('serve_upload', filename=comment.user.profile_picture) }}" alt="{{ comment.user.name }}">
+                                    {% else %}
+                                    <i class="fas fa-user-circle"></i>
+                                    {% endif %}
+                                </div>
+                                <div class="comment-bubble">
+                                    <div class="comment-content">
+                                        <h5>{{ comment.user.name }}</h5>
+                                        <p>{{ comment.content }}</p>
+                                    </div>
+                                    <div class="comment-actions">
+                                        <button class="comment-react-btn {% if comment.is_reacted_by(current_user.id) %}reacted{% endif %}" onclick="reactToComment({{ comment.id }})" id="react-btn-{{ comment.id }}">
+                                            <i class="{% if comment.is_reacted_by(current_user.id) %}fas{% else %}far{% endif %} fa-thumbs-up" id="react-icon-{{ comment.id }}"></i>
+                                            <span id="react-count-{{ comment.id }}">{{ comment.get_reactions_count() }}</span>
+                                        </button>
+                                        <span class="comment-time">{{ comment.date_created.strftime('%B %d at %I:%M %p') }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+
+                        <div class="comment-input-box">
+                            <div class="comment-input-container">
+                                <div class="comment-avatar">
+                                    {% if current_user.profile_picture %}
+                                    <img src="{{ url_for('serve_upload', filename=current_user.profile_picture) }}" alt="{{ current_user.name }}">
+                                    {% else %}
+                                    <i class="fas fa-user-circle"></i>
+                                    {% endif %}
+                                </div>
+                                <input type="text" placeholder="Write a comment..." id="comment-input-{{ post.id }}" onkeypress="handleCommentKeypress(event, {{ post.id }})">
+                                <button onclick="addComment({{ post.id }})" class="btn-send-comment">
+                                    <i class="fas fa-paper-plane"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+                {% endif %}
+            </div>
+        </main>
+    </div>
+</div>
+
+<style>
+.feed-main {
+    flex: 1;
+    padding: 30px;
+    max-width: 800px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+.create-post-card {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(0, 191, 255, 0.2);
+    border-radius: 15px;
+    padding: 25px;
+    margin-bottom: 30px;
+}
+
+.create-post-card h3 {
+    color: #00BFFF;
+    margin-bottom: 20px;
+    font-size: 1.2rem;
+}
+
+.create-post-card textarea {
+    width: 100%;
+    padding: 15px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(0, 191, 255, 0.3);
+    border-radius: 10px;
+    color: #fff;
+    font-family: 'Poppins', sans-serif;
+    font-size: 1rem;
+    resize: vertical;
+    margin-bottom: 15px;
+}
+
+.create-post-card textarea:focus {
+    outline: none;
+    border-color: #00BFFF;
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.post-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.image-upload-label {
+    color: #00BFFF;
+    cursor: pointer;
+    padding: 10px 20px;
+    border-radius: 8px;
+    transition: all 0.3s;
+    display: inline-block;
+}
+
+.image-upload-label:hover {
+    background: rgba(0, 191, 255, 0.1);
+}
+
+.image-upload-label input[type="file"] {
+    display: none;
+}
+
+.btn-post {
+    background: linear-gradient(135deg, #00BFFF, #0080FF);
+    color: white;
+    border: none;
+    padding: 12px 30px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s;
+}
+
+.btn-post:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 20px rgba(0, 191, 255, 0.4);
+}
+
+.posts-container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.no-posts-message {
+    text-align: center;
+    padding: 60px 20px;
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.no-posts-message i {
+    font-size: 4rem;
+    margin-bottom: 20px;
+    color: rgba(0, 191, 255, 0.3);
+}
+
+.post-card {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(0, 191, 255, 0.2);
+    border-radius: 15px;
+    padding: 25px;
+    transition: all 0.3s;
+}
+
+.post-card:hover {
+    border-color: rgba(0, 191, 255, 0.4);
+    transform: translateY(-2px);
+}
+
+.post-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 15px;
+}
+
+.post-user-info {
+    display: flex;
+    gap: 12px;
+}
+
+.user-avatar {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 2px solid #00BFFF;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.user-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.user-avatar i {
+    color: #00BFFF;
+    font-size: 2.5rem;
+}
+
+.post-user-info h4 {
+    color: #fff;
+    margin: 0;
+    font-size: 1.1rem;
+}
+
+.post-time {
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 0.85rem;
+}
+
+.btn-delete-post {
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.5);
+    cursor: pointer;
+    padding: 5px 10px;
+    border-radius: 5px;
+    transition: all 0.3s;
+}
+
+.btn-delete-post:hover {
+    color: #ff4444;
+    background: rgba(255, 68, 68, 0.1);
+}
+
+.post-content {
+    margin-bottom: 15px;
+}
+
+.post-content p {
+    color: #fff;
+    line-height: 1.6;
+    margin-bottom: 15px;
+    white-space: pre-wrap;
+}
+
+.post-image {
+    margin-top: 15px;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.post-image img {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
+.post-stats {
+    display: flex;
+    gap: 20px;
+    padding: 10px 0;
+    border-top: 1px solid rgba(0, 191, 255, 0.1);
+    border-bottom: 1px solid rgba(0, 191, 255, 0.1);
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.9rem;
+}
+
+.post-stats i {
+    color: #00BFFF;
+}
+
+.post-actions-bar {
+    display: flex;
+    gap: 10px;
+    padding: 10px 0;
+}
+
+.action-btn {
+    flex: 1;
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.7);
+    padding: 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.action-btn:hover {
+    background: rgba(0, 191, 255, 0.1);
+    color: #00BFFF;
+}
+
+.action-btn.liked {
+    color: #ff4444;
+}
+
+.action-btn.liked i {
+    color: #ff4444;
+}
+
+.comments-section {
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid rgba(0, 191, 255, 0.1);
+}
+
+.comments-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 15px;
+}
+
+.comment {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+}
+
+.comment-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 2px solid #00BFFF;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.05);
+    flex-shrink: 0;
+}
+
+.comment-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.comment-avatar i {
+    color: #00BFFF;
+    font-size: 1.8rem;
+}
+
+.comment-bubble {
+    flex: 1;
+}
+
+.comment-content {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 12px 15px;
+    border-radius: 18px;
+    margin-bottom: 5px;
+}
+
+.comment-content h5 {
+    color: #00BFFF;
+    margin: 0 0 5px 0;
+    font-size: 0.95rem;
+}
+
+.comment-content p {
+    color: #fff;
+    margin: 0;
+    line-height: 1.5;
+}
+
+.comment-actions {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 0 15px;
+}
+
+.comment-react-btn {
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.5);
+    cursor: pointer;
+    padding: 3px 8px;
+    border-radius: 12px;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.85rem;
+}
+
+.comment-react-btn:hover {
+    background: rgba(0, 191, 255, 0.1);
+    color: #00BFFF;
+}
+
+.comment-react-btn.reacted {
+    color: #00BFFF;
+}
+
+.comment-react-btn.reacted i {
+    color: #00BFFF;
+}
+
+.comment-time {
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 0.75rem;
+}
+
+.comment-input-box {
+    margin-top: 15px;
+}
+
+.comment-input-container {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.comment-input-container input {
+    flex: 1;
+    padding: 12px 15px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(0, 191, 255, 0.3);
+    border-radius: 20px;
+    color: #fff;
+    font-family: 'Poppins', sans-serif;
+}
+
+.comment-input-container input:focus {
+    outline: none;
+    border-color: #00BFFF;
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.btn-send-comment {
+    background: linear-gradient(135deg, #00BFFF, #0080FF);
+    color: white;
+    border: none;
+    padding: 12px 15px;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.3s;
+    width: 45px;
+    height: 45px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-send-comment:hover {
+    transform: scale(1.1);
+    box-shadow: 0 5px 15px rgba(0, 191, 255, 0.4);
+}
+
+@media (max-width: 768px) {
+    .feed-main {
+        padding: 15px;
+    }
+
+    .create-post-card, .post-card {
+        padding: 15px;
+    }
+
+    .user-avatar {
+        width: 40px;
+        height: 40px;
+    }
+
+    .user-avatar i {
+        font-size: 2rem;
+    }
+
+    .comment-avatar {
+        width: 32px;
+        height: 32px;
+    }
+
+    .comment-avatar i {
+        font-size: 1.5rem;
+    }
+}
+</style>
+
+<script>
+function likePost(postId) {
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+    fetch(`/feed/post/${postId}/like`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': csrfToken
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if(data.success) {
+            const likeBtn = document.getElementById(`like-btn-${postId}`);
+            const likeIcon = document.getElementById(`like-icon-${postId}`);
+            const likeText = document.getElementById(`like-text-${postId}`);
+            const likesCount = document.getElementById(`likes-count-${postId}`);
+            
+            if(data.liked) {
+                likeBtn.classList.add('liked');
+                likeIcon.classList.remove('far');
+                likeIcon.classList.add('fas');
+                likeText.textContent = 'Unlike';
+            } else {
+                likeBtn.classList.remove('liked');
+                likeIcon.classList.remove('fas');
+                likeIcon.classList.add('far');
+                likeText.textContent = 'Like';
+            }
+            
+            const likesLabel = data.likes_count === 1 ? 'like' : 'likes';
+            likesCount.innerHTML = `<i class="fas fa-heart"></i> ${data.likes_count} ${likesLabel}`;
+        }
+    });
+}
+
+function toggleCommentSection(postId) {
+    const commentSection = document.getElementById(`comments-section-${postId}`);
+    
+    if(commentSection.style.display === 'none') {
+        commentSection.style.display = 'block';
+        document.getElementById(`comment-input-${postId}`).focus();
+    } else {
+        commentSection.style.display = 'none';
+    }
+}
+
+function addComment(postId) {
+    const input = document.getElementById(`comment-input-${postId}`);
+    const content = input.value.trim();
+    
+    if(!content) return;
+    
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+    const formData = new FormData();
+    formData.append('content', content);
+    
+    fetch(`/feed/post/${postId}/comment`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': csrfToken
+        },
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if(data.success) {
+            input.value = '';
+            location.reload();
+        }
+    });
+}
+
+function reactToComment(commentId) {
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+    fetch(`/feed/comment/${commentId}/react`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': csrfToken
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if(data.success) {
+            const reactBtn = document.getElementById(`react-btn-${commentId}`);
+            const reactIcon = document.getElementById(`react-icon-${commentId}`);
+            const reactCount = document.getElementById(`react-count-${commentId}`);
+            
+            if(data.reacted) {
+                reactBtn.classList.add('reacted');
+                reactIcon.classList.remove('far');
+                reactIcon.classList.add('fas');
+            } else {
+                reactBtn.classList.remove('reacted');
+                reactIcon.classList.remove('fas');
+                reactIcon.classList.add('far');
+            }
+            
+            reactCount.textContent = data.reactions_count;
+        }
+    });
+}
+
+function handleCommentKeypress(event, postId) {
+    if(event.key === 'Enter') {
+        addComment(postId);
+    }
+}
+</script>
+{% endblock %}

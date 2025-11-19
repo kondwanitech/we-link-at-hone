@@ -1,0 +1,159 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - WeLink{% endblock %}
+
+{% block content %}
+<div class="dashboard-page">
+    <nav class="dashboard-nav">
+        <div class="nav-container">
+            <div class="logo">
+                <i class="fas fa-link"></i>
+                <span>WeLink</span>
+            </div>
+            <div class="nav-links">
+                <span class="user-name"><i class="fas fa-user"></i> {{ current_user.name }}</span>
+                <a href="{{ url_for('logout') }}" class="btn-logout"><i class="fas fa-sign-out-alt"></i> Logout</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="dashboard-container">
+        <aside class="sidebar">
+            <div class="sidebar-menu">
+                <a href="{{ url_for('dashboard') }}" class="menu-item active">
+                    <i class="fas fa-home"></i> Dashboard
+                </a>
+                <a href="{{ url_for('feed') }}" class="menu-item">
+                    <i class="fas fa-stream"></i> Feed
+                </a>
+                <a href="{{ url_for('profile') }}" class="menu-item">
+                    <i class="fas fa-user-circle"></i> Profile
+                </a>
+                <a href="{{ url_for('report_lost') }}" class="menu-item">
+                    <i class="fas fa-exclamation-circle"></i> Report Lost
+                </a>
+                <a href="{{ url_for('submit_found') }}" class="menu-item">
+                    <i class="fas fa-box"></i> Submit Found
+                </a>
+                <a href="{{ url_for('search') }}" class="menu-item">
+                    <i class="fas fa-search"></i> Search Items
+                </a>
+            </div>
+        </aside>
+
+        <main class="dashboard-main">
+            {% if notifications %}
+            <div class="notifications-panel">
+                <h3><i class="fas fa-bell"></i> Recent Notifications</h3>
+                <div class="notifications-list">
+                    {% for notification in notifications %}
+                    <div class="notification-item">
+                        <p>{{ notification.message }}</p>
+                        <button onclick="markAsRead({{ notification.id }})" class="mark-read">✓</button>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <section class="items-section">
+                <h2>Lost Items ({{ lost_items|length }} {% if lost_items|length == 1 %}item{% else %}items{% endif %})</h2>
+                {% if lost_items|length == 0 %}
+                <p class="no-items-message">No lost items reported yet.</p>
+                {% else %}
+                <div class="items-grid">
+                    {% for item in lost_items[:6] %}
+                    <div class="item-card lost">
+                        {% if item.image_path %}
+                        <div class="item-image" style="background-image: url('{{ url_for('serve_upload', filename=item.image_path) }}')"></div>
+                        {% else %}
+                        <div class="item-image no-image"><i class="fas fa-image"></i></div>
+                        {% endif %}
+                        <div class="item-details">
+                            <h3>{{ item.item_name }}</h3>
+                            <p class="description">{{ item.description[:100] }}...</p>
+                            <div class="item-meta">
+                                <span><i class="fas fa-map-marker-alt"></i> {{ item.location }}</span>
+                                <span><i class="fas fa-calendar"></i> {{ item.date_lost }}</span>
+                            </div>
+                            <span class="status-badge {{ item.status }}">{{ item.status }}</span>
+                            {% if item.user_id == current_user.id and item.status == 'pending' %}
+                            <form method="POST" action="{{ url_for('mark_returned', item_id=item.id) }}" style="display: inline;">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                <button type="submit" class="btn-action">Mark Returned</button>
+                            </form>
+                            {% endif %}
+                            {% if item.user_id == current_user.id %}
+                            <form method="POST" action="{{ url_for('delete_lost_item', item_id=item.id) }}" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete this item?')">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                <button type="submit" class="btn-delete">Delete</button>
+                            </form>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </section>
+
+            <section class="items-section">
+                <h2>Found Items ({{ found_items|length }} {% if found_items|length == 1 %}item{% else %}items{% endif %})</h2>
+                {% if found_items|length == 0 %}
+                <p class="no-items-message">No found items submitted yet.</p>
+                {% else %}
+                <div class="items-grid">
+                    {% for item in found_items[:6] %}
+                    <div class="item-card found">
+                        {% if item.image_path %}
+                        <div class="item-image" style="background-image: url('{{ url_for('serve_upload', filename=item.image_path) }}')"></div>
+                        {% else %}
+                        <div class="item-image no-image"><i class="fas fa-image"></i></div>
+                        {% endif %}
+                        <div class="item-details">
+                            <h3>{{ item.item_name }}</h3>
+                            <p class="description">{{ item.description[:100] }}...</p>
+                            <div class="item-meta">
+                                <span><i class="fas fa-map-marker-alt"></i> {{ item.location }}</span>
+                                <span><i class="fas fa-calendar"></i> {{ item.date_found }}</span>
+                            </div>
+                            <span class="status-badge {{ item.status }}">{{ item.status }}</span>
+                            {% if item.user_id == current_user.id and item.status == 'pending' %}
+                            <form method="POST" action="{{ url_for('mark_claimed', item_id=item.id) }}" style="display: inline;">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                <button type="submit" class="btn-action">Mark Claimed</button>
+                            </form>
+                            {% endif %}
+                            {% if item.user_id == current_user.id %}
+                            <form method="POST" action="{{ url_for('delete_found_item', item_id=item.id) }}" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete this item?')">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                <button type="submit" class="btn-delete">Delete</button>
+                            </form>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </section>
+        </main>
+    </div>
+</div>
+
+<script>
+function markAsRead(notificationId) {
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+    fetch(`/notifications/mark-read/${notificationId}`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': csrfToken
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if(data.success) {
+            location.reload();
+        }
+    });
+}
+</script>
+{% endblock %}

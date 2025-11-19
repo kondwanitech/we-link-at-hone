@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Student Account - WeLink Admin{% endblock %}
+
+{% block content %}
+<div class="dashboard-page">
+    <nav class="dashboard-nav">
+        <div class="nav-container">
+            <div class="logo">
+                <i class="fas fa-link"></i>
+                <span>WeLink Admin</span>
+            </div>
+            <div class="nav-links">
+                <span class="user-name"><i class="fas fa-user"></i> {{ current_user.name }}</span>
+                <a href="{{ url_for('admin_dashboard') }}" class="btn-secondary">Back to Dashboard</a>
+                <a href="{{ url_for('logout') }}" class="btn-logout"><i class="fas fa-sign-out-alt"></i> Logout</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="form-page">
+        <div class="form-container">
+            <h2><i class="fas fa-user-edit"></i> Edit Student Account</h2>
+            <form method="POST" class="form">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                
+                <div class="form-group">
+                    <label for="student_number"><i class="fas fa-id-card"></i> Student Number</label>
+                    <input type="text" id="student_number" name="student_number" required value="{{ student.student_number }}">
+                </div>
+
+                <div class="form-group">
+                    <label for="name"><i class="fas fa-user"></i> Full Name</label>
+                    <input type="text" id="name" name="name" required value="{{ student.name }}">
+                </div>
+
+                <div class="form-group">
+                    <label for="email"><i class="fas fa-envelope"></i> Email Address</label>
+                    <input type="email" id="email" name="email" required value="{{ student.email }}">
+                </div>
+
+                <div class="form-group">
+                    <label for="reset_password"><i class="fas fa-lock"></i> Reset Password (Optional)</label>
+                    <input type="text" id="reset_password" name="reset_password" placeholder="Leave empty to keep current password">
+                    <small>If you enter a new password, the student will be required to change it upon next login.</small>
+                </div>
+
+                <button type="submit" class="btn-submit"><i class="fas fa-save"></i> Update Student Account</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

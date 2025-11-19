@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+
+{% block title %}Search Results - WeLink{% endblock %}
+
+{% block content %}
+<div class="dashboard-page">
+    <nav class="dashboard-nav">
+        <div class="nav-container">
+            <div class="logo">
+                <i class="fas fa-link"></i>
+                <span>WeLink</span>
+            </div>
+            <div class="nav-links">
+                <a href="{{ url_for('dashboard') }}" class="btn-secondary">Back to Dashboard</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="search-page">
+        <div class="search-header">
+            <h1>Search Items</h1>
+            <form method="GET" action="{{ url_for('search') }}" class="search-form">
+                <input type="text" name="q" placeholder="Search by item name or description" value="{{ query }}">
+                <select name="type">
+                    <option value="all">All Items</option>
+                    <option value="lost">Lost Items</option>
+                    <option value="found">Found Items</option>
+                </select>
+                <input type="text" name="location" placeholder="Location">
+                <button type="submit"><i class="fas fa-search"></i> Search</button>
+            </form>
+        </div>
+
+        {% if lost_items %}
+        <section class="items-section">
+            <h2>Lost Items ({{ lost_items|length }} {% if lost_items|length == 1 %}item{% else %}items{% endif %})</h2>
+            <div class="items-grid">
+                {% for item in lost_items %}
+                <div class="item-card lost">
+                    {% if item.image_path %}
+                    <div class="item-image" style="background-image: url('{{ url_for('serve_upload', filename=item.image_path) }}')"></div>
+                    {% else %}
+                    <div class="item-image no-image"><i class="fas fa-image"></i></div>
+                    {% endif %}
+                    <div class="item-details">
+                        <h3>{{ item.item_name }}</h3>
+                        <p class="description">{{ item.description }}</p>
+                        <div class="item-meta">
+                            <span><i class="fas fa-map-marker-alt"></i> {{ item.location }}</span>
+                            <span><i class="fas fa-calendar"></i> {{ item.date_lost }}</span>
+                        </div>
+                        <span class="status-badge {{ item.status }}">{{ item.status }}</span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+        {% endif %}
+
+        {% if found_items %}
+        <section class="items-section">
+            <h2>Found Items ({{ found_items|length }} {% if found_items|length == 1 %}item{% else %}items{% endif %})</h2>
+            <div class="items-grid">
+                {% for item in found_items %}
+                <div class="item-card found">
+                    {% if item.image_path %}
+                    <div class="item-image" style="background-image: url('{{ url_for('serve_upload', filename=item.image_path) }}')"></div>
+                    {% else %}
+                    <div class="item-image no-image"><i class="fas fa-image"></i></div>
+                    {% endif %}
+                    <div class="item-details">
+                        <h3>{{ item.item_name }}</h3>
+                        <p class="description">{{ item.description }}</p>
+                        <div class="item-meta">
+                            <span><i class="fas fa-map-marker-alt"></i> {{ item.location }}</span>
+                            <span><i class="fas fa-calendar"></i> {{ item.date_found }}</span>
+                        </div>
+                        <span class="status-badge {{ item.status }}">{{ item.status }}</span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+        {% endif %}
+
+        {% if not lost_items and not found_items %}
+        <div class="no-results">
+            <i class="fas fa-search"></i>
+            <p>No items found. Try a different search query.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
